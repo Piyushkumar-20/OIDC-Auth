@@ -1,0 +1,13 @@
+import jwt from "jsonwebtoken";
+
+export interface JWTClaims {
+  iss: string;
+  sub: string;
+  email: string;
+  emai_verified: string;
+  exp: number;
+  family_name?: string;
+  given_name: string;
+  name: string;
+  picture?: string;
+}

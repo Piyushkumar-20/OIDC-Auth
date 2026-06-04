@@ -14,3 +14,4 @@ openssl rsa -in "$CERT_DIR/private-key.pem" -pubout -out "$CERT_DIR/public-key.p
 
 # Print success message
 echo "Keys have been generated in the $CERT_DIR/ folder."
+

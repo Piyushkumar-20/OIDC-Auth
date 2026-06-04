@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "db:migrate": "drizzle-kit migrate",
-    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate --config=db.config.js",
+    "db:generate": "drizzle-kit generate --config=db.config.js",
     "db:studio": "drizzle-kit studio",
     "dev": "tsc-watch --onSuccess \"node dist/index\""
   },
