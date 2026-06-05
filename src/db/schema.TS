@@ -43,7 +43,7 @@ export const authorizationCodeTable = pgTable("authorization_codes", {
   id: uuid("id").primaryKey().defaultRandom(),
   code: text("code").notNull().unique(),
 
-  user_id: uuid("user_id").notNull(),
+  userId: uuid("user_id").notNull(),
   client_id: text("client_id").notNull(),
   redirect_uri: text("redirect_uri").notNull(),
 

@@ -5,7 +5,11 @@ import crypto from "node:crypto";
 import { PUBLIC_KEY, PRIVATE_KEY } from "./utils/cert.js";
 import { db } from "./db/index.js";
 import { eq } from "drizzle-orm";
-import { userTable, applicationTable } from "./db/schema.js";
+import {
+  userTable,
+  applicationTable,
+  authorizationCodeTable
+} from "./db/schema.js";
 import type { JWTClaims } from "./utils/user-token.js";
 import JWT from "jsonwebtoken";
 
@@ -29,7 +33,7 @@ app.get("/.well-known/openid-configuration", (req, res) => {
   const ISSUER = `http://localhost:3000`;
   res.json({
     issuer: ISSUER,
-    authorization_endpoint: `${ISSUER}/o/authenticate`,
+    authorization_endpoint: `${ISSUER}/o/authorize`,
     userinfo_endpoint: `${ISSUER}/o/userinfo`,
     jwks_uri: `${ISSUER}/.well-known/jwks.json`,
   });
@@ -45,7 +49,14 @@ app.get("/o/authenticate", (req, res) => {
 });
 
 app.post("/o/authenticate/sign-in", async (req, res) => {
-  const { email, password } = req.body;
+  const {
+    email,
+    password,
+    client_id,
+    redirect_uri,
+    state,
+    nonce,
+  } = req.body;
 
   if (!email || !password) {
     res.status(400).json({ message: "Email and password are required." });
@@ -73,24 +84,39 @@ app.post("/o/authenticate/sign-in", async (req, res) => {
     return;
   }
 
-  const ISSUER = `http://localhost:${PORT}`;
-  const now = Math.floor(Date.now() / 1000);
+  const [application] = await db
+  .select()
+  .from(applicationTable)
+  .where(eq(applicationTable.client_id, client_id))
+  .limit(1);
 
-  const claims: JWTClaims = {
-    iss: ISSUER,
-    sub: user.id,
-    email: user.email,
-    email_verified: String(user.emailVerified),
-    exp: now + 3600,
-    given_name: user.firstName ?? "",
-    family_name: user.lastName ?? undefined,
-    name: [user.firstName, user.lastName].filter(Boolean).join(" "),
-    picture: user.profileImageURL ?? undefined,
-  };
+  if (!application) {
+    return res.status(400).json({
+      message: "Invalid client_id",
+    });
+  }
 
-  const token = JWT.sign(claims, PRIVATE_KEY, { algorithm: "RS256" });
+  if (application.redirectUri !== redirect_uri) {
+    return res.status(400).json({
+      message: "Invalid redirect_uri",
+    });
+  }
+  const code = crypto.randomBytes(32).toString('hex')
 
-  res.json({ token });
+  await db.insert(authorizationCodeTable).values({
+    code,
+    userId: user.id,
+    client_id,
+    redirect_uri,
+    nonce,
+    expires_at: new Date(
+      Date.now() + 5 * 60 * 1000
+    ),
+  });
+  return res.json({
+    redirect:
+      `${redirect_uri}?code=${code}&state=${state}`,
+  });
 });
 
 app.post("/o/authenticate/sign-up", async (req, res) => {
@@ -177,6 +203,7 @@ app.get("/o/userinfo", async (req, res) => {
   });
 });
 
+//OAuth Implementation
 app.post("/admin/application", async (req, res) => {
   const { displayName, applicationUrl, redirectUri } = req.body;
 
@@ -205,6 +232,52 @@ app.post("/admin/application", async (req, res) => {
   });
 });
 
+app.get("/o/authorize", async (req, res) => {
+  try {
+    const { client_id, redirect_uri, response_type, state, nonce } = req.query;
+
+    // Required params
+    if (!client_id || !redirect_uri) {
+      return res.status(400).json({
+        message: "client_id and redirect_uri are required",
+      });
+    }
+
+    // OAuth Authorization Code Flow only
+    if (response_type !== "code") {
+      return res.status(400).json({
+        message: "Only Authorization Code flow is supported",
+      });
+    }
+
+    // Validate application
+    const [application] = await db
+      .select()
+      .from(applicationTable)
+      .where(eq(applicationTable.client_id, String(client_id)))
+      .limit(1);
+
+    if (!application) {
+      return res.status(404).json({
+        message: "Invalid client_id",
+      });
+    }
+    // Validate redirect URI
+    if (application.redirectUri !== String(redirect_uri)) {
+      return res.status(400).json({
+        message: "Invalid redirect_uri",
+      });
+    }
+    // Show login page
+    return res.sendFile(path.resolve("public", "authenticate.html"));
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Internal Server Error",
+    });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`AuthServer is running on http://localhost:${PORT}`);
