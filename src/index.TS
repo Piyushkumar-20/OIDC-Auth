@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import { PUBLIC_KEY, PRIVATE_KEY } from "./utils/cert.js";
 import { db } from "./db/index.js";
 import { eq } from "drizzle-orm";
-import { userTable } from "./db/schema.js";
+import { userTable, applicationTable } from "./db/schema.js";
 import type { JWTClaims } from "./utils/user-token.js";
 import JWT from "jsonwebtoken";
 
@@ -132,6 +132,79 @@ app.post("/o/authenticate/sign-up", async (req, res) => {
 
   res.status(201).json({ ok: true });
 });
+
+app.get("/o/userinfo", async (req, res) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader?.startsWith("Bearer ")) {
+    res
+      .status(401)
+      .json({ message: "Missing or invalid Authorization header." });
+    return;
+  }
+
+  const token = authHeader.slice(7);
+
+  let claims: JWTClaims;
+  try {
+    claims = JWT.verify(token, PUBLIC_KEY, {
+      algorithms: ["RS256"],
+    }) as JWTClaims;
+  } catch {
+    res.status(401).json({ message: "Invalid or expired token." });
+    return;
+  }
+
+  const [user] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, claims.sub))
+    .limit(1);
+
+  if (!user) {
+    res.status(404).json({ message: "User not found." });
+    return;
+  }
+
+  res.json({
+    sub: user.id,
+    email: user.email,
+    email_verified: user.emailVerified,
+    given_name: user.firstName,
+    family_name: user.lastName,
+    name: [user.firstName, user.lastName].filter(Boolean).join(" "),
+    picture: user.profileImageURL,
+  });
+});
+
+app.post("/admin/application", async (req, res) => {
+  const { displayName, applicationUrl, redirectUri } = req.body;
+
+  if (!displayName || !applicationUrl || !redirectUri) {
+    return res.status(400).json({
+      message: "Display Name, Application URL, Redirct URL is required",
+    });
+  }
+  const clientId = crypto.randomUUID();
+  const clientSecret = crypto.randomBytes(32).toString("hex");
+
+  const [application] = await db
+    .insert(applicationTable)
+    .values({
+      displayName,
+      applicationUrl,
+      redirectUri,
+      client_id: clientId,
+      client_secret: clientSecret,
+    })
+    .returning();
+
+  return res.json({
+    client_id: application?.client_id,
+    client_secret: application?.client_secret,
+  });
+});
+
 
 app.listen(PORT, () => {
   console.log(`AuthServer is running on http://localhost:${PORT}`);

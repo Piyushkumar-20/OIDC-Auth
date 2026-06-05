@@ -15,6 +15,20 @@
       "when": 1780657451355,
       "tag": "0001_flippant_alex_power",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1780673853116,
+      "tag": "0002_aberrant_blockbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1780675592605,
+      "tag": "0003_normal_wildside",
+      "breakpoints": true
     }
   ]
 }
