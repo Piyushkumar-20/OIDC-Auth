@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import {
   userTable,
   applicationTable,
-  authorizationCodeTable
+  authorizationCodeTable,
 } from "./db/schema.js";
 import type { JWTClaims } from "./utils/user-token.js";
 import JWT from "jsonwebtoken";
@@ -36,6 +36,7 @@ app.get("/.well-known/openid-configuration", (req, res) => {
     authorization_endpoint: `${ISSUER}/o/authorize`,
     userinfo_endpoint: `${ISSUER}/o/userinfo`,
     jwks_uri: `${ISSUER}/.well-known/jwks.json`,
+    tokeninfo: `${ISSUER}/o/tokeninfo`,
   });
 });
 
@@ -49,14 +50,7 @@ app.get("/o/authenticate", (req, res) => {
 });
 
 app.post("/o/authenticate/sign-in", async (req, res) => {
-  const {
-    email,
-    password,
-    client_id,
-    redirect_uri,
-    state,
-    nonce,
-  } = req.body;
+  const { email, password, client_id, redirect_uri, state, nonce } = req.body;
 
   if (!email || !password) {
     res.status(400).json({ message: "Email and password are required." });
@@ -85,10 +79,10 @@ app.post("/o/authenticate/sign-in", async (req, res) => {
   }
 
   const [application] = await db
-  .select()
-  .from(applicationTable)
-  .where(eq(applicationTable.client_id, client_id))
-  .limit(1);
+    .select()
+    .from(applicationTable)
+    .where(eq(applicationTable.client_id, client_id))
+    .limit(1);
 
   if (!application) {
     return res.status(400).json({
@@ -101,7 +95,7 @@ app.post("/o/authenticate/sign-in", async (req, res) => {
       message: "Invalid redirect_uri",
     });
   }
-  const code = crypto.randomBytes(32).toString('hex')
+  const code = crypto.randomBytes(32).toString("hex");
 
   await db.insert(authorizationCodeTable).values({
     code,
@@ -109,13 +103,10 @@ app.post("/o/authenticate/sign-in", async (req, res) => {
     client_id,
     redirect_uri,
     nonce,
-    expires_at: new Date(
-      Date.now() + 5 * 60 * 1000
-    ),
+    expires_at: new Date(Date.now() + 5 * 60 * 1000),
   });
   return res.json({
-    redirect:
-      `${redirect_uri}?code=${code}&state=${state}`,
+    redirect: `${redirect_uri}?code=${code}&state=${state}`,
   });
 });
 
@@ -279,6 +270,71 @@ app.get("/o/authorize", async (req, res) => {
   }
 });
 
+app.post("/o/tokeninfo", async (req, res) => {
+  const { code, client_secret } = req.body;
+
+  if (!client_secret || !code) {
+    return res
+      .status(400)
+      .json({ message: "Code and Client Secret is required" });
+  }
+
+  const [application] = await db
+    .select()
+    .from(applicationTable)
+    .where(eq(applicationTable.client_secret, client_secret))
+    .limit(1);
+
+  if (!application) {
+    return res.status(401).json({ message: "Invalid client Secret" });
+  }
+  const [authCode] = await db
+    .select()
+    .from(authorizationCodeTable)
+    .where(eq(authorizationCodeTable.code, code))
+    .limit(1);
+
+  if (!authCode) {
+    return res.status(400).json({ message: "Invalid Code" });
+  }
+
+  if (authCode.client_id !== application.client_id) {
+    return res.status(400).json({
+      message: "Code does not belong to client",
+    });
+  }
+
+  if (authCode.used) {
+    return res.status(400).json({
+      message: "Code already used",
+    });
+  }
+
+  if (authCode.expires_at.getTime() < Date.now()) {
+    return res.status(400).json({
+      message: "Code expired",
+    });
+  }
+  const [user] = await db
+  .select()
+  .from(userTable)
+  .where(eq(userTable.id, authCode.userId))
+  .limit(1)
+
+  if (!user) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+  return res.json({
+    message: "User fetched successfully",
+    user: {
+      id: user.id,
+      email: user.email,
+    },
+  });
+
+});
 app.listen(PORT, () => {
   console.log(`AuthServer is running on http://localhost:${PORT}`);
 });

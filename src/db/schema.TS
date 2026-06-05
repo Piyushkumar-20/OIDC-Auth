@@ -53,3 +53,15 @@ export const authorizationCodeTable = pgTable("authorization_codes", {
   expires_at: timestamp("expires_at").notNull(),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
+
+export const refreshTokenTable = pgTable("refresh_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").notNull(),
+
+  token: text("token").notNull().unique(),
+  client_id: text("client_id").notNull(),
+
+  expires_at: timestamp("expires_at").notNull(),
+
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
