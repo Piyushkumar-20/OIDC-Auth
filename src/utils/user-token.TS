@@ -4,7 +4,7 @@ export interface JWTClaims {
   iss: string;
   sub: string;
   email: string;
-  emai_verified: string;
+  email_verified: string;
   exp: number;
   family_name?: string;
   given_name: string;
