@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "db:migrate": "drizzle-kit migrate --config=db.config.js",
-    "db:generate": "drizzle-kit generate --config=db.config.js",
+    "db:migrate": "drizzle-kit migrate",
+    "db:generate": "drizzle-kit generate",
     "db:studio": "drizzle-kit studio",
-    "dev": "tsc-watch --onSuccess \"node dist/index\""
+    "dev": "tsc-watch --onSuccess \"node dist/index.js\""
   },
   "keywords": [],
   "author": "",
@@ -27,8 +28,8 @@
     "@types/node-jose": "^1.1.13",
     "@types/pg": "^8.20.0",
     "drizzle-kit": "^0.31.10",
+    "ts-node-dev": "^2.0.0",
     "tsc-watch": "^7.2.0",
-    "tsx": "^4.21.0",
-    "typescript": "^6.0.3"
+    "tsx": "^4.21.0"
   }
 }
