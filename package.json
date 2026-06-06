@@ -2,6 +2,7 @@
   "name": "oidc-authentication",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "dist/index.js",
 "scripts": {
     "db:migrate": "drizzle-kit migrate",
