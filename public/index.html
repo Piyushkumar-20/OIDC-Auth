@@ -178,17 +178,17 @@
     <section class="how-section" id="how-it-works" aria-labelledby="howHeading">
       <div class="section-inner">
         <div class="section-label">How It Works</div>
-        <h2 class="section-heading" id="howHeading">The Authorization Code Flow</h2>
-        <p class="section-subheading">Three steps from zero to authenticated user.</p>
+        <h2 class="section-heading" id="howHeading">From zero to authenticated in three steps</h2>
+        <p class="section-subheading">Integrate secure, standards-based login into any application — in any language or framework.</p>
 
         <div class="steps">
           <div class="step">
             <div class="step-number" aria-hidden="true">01</div>
             <div class="step-content">
-              <h3 class="step-title">Register Your Application</h3>
-              <p class="step-desc">Create an application and receive a Client ID and Client Secret. Specify your Redirect URI — the callback URL where users will be sent after authorization.</p>
+              <h3 class="step-title">Create an Application</h3>
+              <p class="step-desc">Register your project in the AuthForge dashboard. Configure your allowed redirect URLs and instantly receive a Client ID and Client Secret — your application's credentials for the OAuth flow.</p>
               <a href="/register-app.html" class="step-link">
-                Register an App
+                Create Your App
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
               </a>
             </div>
@@ -199,9 +199,9 @@
           <div class="step">
             <div class="step-number" aria-hidden="true">02</div>
             <div class="step-content">
-              <h3 class="step-title">Redirect the User to Authorize</h3>
-              <p class="step-desc">Send the user to <code class="inline-code">/o/authorize</code> with your <code class="inline-code">client_id</code>, <code class="inline-code">redirect_uri</code>, and requested scopes. They sign in and approve access.</p>
-              <div class="step-code code-block">/o/authorize?response_type=code<br />&amp;client_id=your-client-id<br />&amp;redirect_uri=…&amp;scope=openid+email</div>
+              <h3 class="step-title">Add Sign In with AuthForge</h3>
+              <p class="step-desc">Redirect users to AuthForge's hosted sign-in page. We handle the authentication flow using OAuth 2.0 and OpenID Connect — compatible with any OIDC client library or custom integration.</p>
+              <div class="step-code code-block">GET /o/authorize<br />  ?client_id=<span>your-client-id</span><br />  &amp;redirect_uri=https://yourapp.com/callback<br />  &amp;scope=openid+profile+email</div>
             </div>
           </div>
 
@@ -210,9 +210,9 @@
           <div class="step">
             <div class="step-number" aria-hidden="true">03</div>
             <div class="step-content">
-              <h3 class="step-title">Exchange the Code for Tokens</h3>
-              <p class="step-desc">Your server receives an authorization code at the redirect URI. Exchange it at <code class="inline-code">/o/tokeninfo</code> using your Client Secret to receive an access token and refresh token.</p>
-              <div class="step-code code-block">POST /o/tokeninfo<br />&#123; code, client_secret &#125;<br />→ &#123; access_token, refresh_token &#125;</div>
+              <h3 class="step-title">Authenticate Users Securely</h3>
+              <p class="step-desc">Once the user signs in, AuthForge redirects back to your app with a short-lived code. Exchange it server-side to receive a signed access token, verified identity claims, and a refresh token — everything you need to trust and maintain the session.</p>
+              <div class="step-code code-block">&#123;<br />  "access_token":  "eyJhbGciOiJSUzI1NiJ9…",<br />  "refresh_token": "8f9a2b3c4d5e6f7a…",<br />  "token_type":    "Bearer",<br />  "expires_in":    3600<br />&#125;</div>
             </div>
           </div>
         </div>
