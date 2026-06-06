@@ -16,6 +16,7 @@ import JWT from "jsonwebtoken";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
+const ISSUER = process.env.ISSUER ?? `http://localhost:${PORT}`;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -53,7 +54,6 @@ function requireAuth(
 }
 
 function generateAccessToken(user: typeof userTable.$inferSelect) {
-  const ISSUER = `http://localhost:${PORT}`;
   const now = Math.floor(Date.now() / 1000);
 
   const claims: JWTClaims = {
@@ -85,7 +85,6 @@ app.get("/health", (req, res) => {
 
 // OIDC Implementation
 app.get("/.well-known/openid-configuration", (req, res) => {
-  const ISSUER = `http://localhost:3000`;
   res.json({
     issuer: ISSUER,
     authorization_endpoint: `${ISSUER}/o/authorize`,
