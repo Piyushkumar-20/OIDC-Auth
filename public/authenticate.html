@@ -299,6 +299,8 @@
       btnText.textContent = loading ? 'Signing in…' : 'Sign in';
     }
 
+    const isOAuthFlow = params.get('client_id') && params.get('redirect_uri');
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       hideError();
@@ -314,17 +316,23 @@
       setLoading(true);
 
       try {
-        const res = await fetch('/o/authenticate/sign-in', {
+        const endpoint = isOAuthFlow ? '/o/authenticate/sign-in' : '/sign-in';
+
+        const body = isOAuthFlow
+          ? {
+              email,
+              password,
+              client_id: params.get('client_id'),
+              redirect_uri: params.get('redirect_uri'),
+              state: params.get('state'),
+              nonce: params.get('nonce'),
+            }
+          : { email, password };
+
+        const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email,
-            password,
-            client_id: params.get('client_id'),
-            redirect_uri: params.get('redirect_uri'),
-            state: params.get('state'),
-            nonce: params.get('nonce'),
-          }),
+          body: JSON.stringify(body),
         });
 
         const data = await res.json().catch(() => ({}));

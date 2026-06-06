@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Register Application — AuthForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <link rel="stylesheet" href="/css/register-app.css" />
+</head>
+<body>
+  <main class="page-center" role="main">
+
+    <!-- Form view -->
+    <div class="card reg-card" id="formView">
+      <div class="card-header">
+        <div class="icon-badge" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect width="8" height="8" x="2" y="2" rx="1.5"/>
+            <rect width="8" height="8" x="14" y="2" rx="1.5"/>
+            <rect width="8" height="8" x="2" y="14" rx="1.5"/>
+            <path d="M14 14h8M18 14v8"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Register Application</h1>
+          <p class="subtitle">Connect your app to AuthForge</p>
+        </div>
+      </div>
+
+      <form class="form" id="registerForm" novalidate>
+        <div id="errorMsg" class="alert alert-error" role="alert" style="display:none"></div>
+
+        <div class="field">
+          <label for="displayName">Application Name</label>
+          <input
+            id="displayName"
+            name="displayName"
+            type="text"
+            placeholder="My Awesome App"
+            autocomplete="off"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="applicationUrl">Application URL</label>
+          <input
+            id="applicationUrl"
+            name="applicationUrl"
+            type="url"
+            placeholder="https://myapp.example.com"
+            autocomplete="off"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="redirectUri">Redirect URI</label>
+          <input
+            id="redirectUri"
+            name="redirectUri"
+            type="url"
+            placeholder="https://myapp.example.com/callback"
+            autocomplete="off"
+            required
+          />
+          <span class="hint">The URI users will be redirected to after authorization.</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="submitBtn">
+          <span class="spinner" id="spinner"></span>
+          <span id="btnText">Create Application</span>
+        </button>
+      </form>
+
+      <div class="card-footer">
+        <a href="/dashboard.html" class="footer-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m15 18-6-6 6-6"/>
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Success view -->
+    <div class="card reg-card" id="successView" style="display:none" aria-live="polite">
+      <div class="card-header">
+        <div class="success-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5"/>
+          </svg>
+        </div>
+        <div>
+          <h1>Application Created</h1>
+          <p class="subtitle" id="createdAppName">Your app is ready to use</p>
+        </div>
+      </div>
+
+      <div class="alert alert-warning" role="alert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink:0;margin-top:1px">
+          <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+          <path d="M12 9v4M12 17h.01"/>
+        </svg>
+        <span>Store your client secret securely. It will not be shown again.</span>
+      </div>
+
+      <div class="credentials">
+        <div class="credential-field">
+          <div class="credential-label">Client ID</div>
+          <div class="credential-row">
+            <code class="code-block credential-value" id="clientIdValue"></code>
+            <button type="button" class="btn btn-outline copy-btn" id="copyClientId" aria-label="Copy Client ID">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="credential-field">
+          <div class="credential-label">Client Secret</div>
+          <div class="credential-row">
+            <code class="code-block credential-value" id="clientSecretValue"></code>
+            <button type="button" class="btn btn-outline copy-btn" id="copyClientSecret" aria-label="Copy Client Secret">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="14" height="14" x="8" y="8" rx="2" ry="2"/>
+                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/>
+              </svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="success-actions">
+        <a href="/dashboard.html" class="btn btn-primary btn-full">Go to Dashboard</a>
+        <button type="button" class="btn btn-outline btn-full" id="registerAnotherBtn">Register Another App</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="/js/register-app.js"></script>
+</body>
+</html>

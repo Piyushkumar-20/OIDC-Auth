@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AuthForge — Secure OAuth 2.0 &amp; OpenID Connect</title>
+  <meta name="description" content="Add secure authentication to your application in minutes with OAuth 2.0 Authorization Code Flow, OpenID Connect, and RS256 JWT tokens." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/shared.css" />
+  <link rel="stylesheet" href="/css/landing.css" />
+</head>
+<body>
+
+  <!-- Nav -->
+  <header class="site-nav" role="banner">
+    <div class="nav-inner">
+      <a href="/index.html" class="nav-logo" aria-label="AuthForge home">
+        <div class="nav-logo-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <span>AuthForge</span>
+      </a>
+      <div class="nav-links" role="navigation" aria-label="Main navigation">
+        <a href="#features" class="nav-text-link">Features</a>
+        <a href="#how-it-works" class="nav-text-link">How It Works</a>
+        <a href="/dashboard.html" class="nav-text-link" data-auth-only>Dashboard</a>
+      </div>
+      <div class="nav-actions" id="navActions">
+        <a href="/o/authenticate" class="btn btn-outline btn-sm">Sign In</a>
+        <a href="/register-app.html" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+      <button class="nav-toggle btn btn-ghost" id="navToggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="mobileMenu">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+    </div>
+    <div class="mobile-menu" id="mobileMenu" hidden>
+      <a href="#features" class="mobile-link">Features</a>
+      <a href="#how-it-works" class="mobile-link">How It Works</a>
+      <a href="/dashboard.html" class="mobile-link" data-auth-only>Dashboard</a>
+      <div id="mobileAuthItems" class="mobile-auth-items">
+        <a href="/o/authenticate" class="mobile-link">Sign In</a>
+        <a href="/register-app.html" class="btn btn-primary btn-full">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main role="main">
+
+    <!-- Hero -->
+    <section class="hero" aria-labelledby="heroHeading">
+      <div class="section-inner hero-inner">
+        <div class="hero-badge">OAuth 2.0 &amp; OpenID Connect</div>
+        <h1 class="hero-heading" id="heroHeading">
+          Add secure authentication<br />to your application<br />in minutes.
+        </h1>
+        <p class="hero-subheading">
+          A complete identity provider with Authorization Code Flow, RS256 JWTs,
+          JWKS endpoint, and token refresh. Production-ready and open.
+        </p>
+        <div class="hero-actions">
+          <a href="/register-app.html" class="btn btn-primary btn-lg">
+            Register Your App
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </a>
+          <a href="/.well-known/openid-configuration" class="btn btn-outline btn-lg" target="_blank" rel="noopener">
+            View OIDC Config
+          </a>
+        </div>
+
+        <div class="hero-code" role="region" aria-label="Authorization URL example">
+          <div class="code-file">
+            <span class="code-file-dot" aria-hidden="true"></span>
+            <span class="code-file-dot" aria-hidden="true"></span>
+            <span class="code-file-dot" aria-hidden="true"></span>
+            <span class="code-file-name">authorization url</span>
+          </div>
+          <pre class="code-body"><code><span class="ct">GET</span> /o/authorize
+  ?<span class="ck">response_type</span>=<span class="cv">code</span>
+  &amp;<span class="ck">client_id</span>=<span class="cv">your-client-id</span>
+  &amp;<span class="ck">redirect_uri</span>=<span class="cv">https://yourapp.com/callback</span>
+  &amp;<span class="ck">scope</span>=<span class="cv">openid profile email</span>
+  &amp;<span class="ck">state</span>=<span class="cv">random-state-value</span></code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features-section" id="features" aria-labelledby="featuresHeading">
+      <div class="section-inner">
+        <div class="section-label">Features</div>
+        <h2 class="section-heading" id="featuresHeading">Everything you need for modern auth</h2>
+        <p class="section-subheading">Built on open standards so your application stays portable and secure.</p>
+
+        <div class="features-grid">
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z"/>
+                <path d="M12 8v4l3 3"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Authorization Code Flow</h3>
+            <p class="feature-desc">The most secure OAuth 2.0 grant type. Keeps tokens out of the browser and supports PKCE for public clients.</p>
+          </div>
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/>
+                <path d="M9 12h6M12 9v6"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">OpenID Connect</h3>
+            <p class="feature-desc">Identity layer on top of OAuth 2.0. UserInfo endpoint, discovery document, and ID tokens with standard claims.</p>
+          </div>
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">RS256 JWT Tokens</h3>
+            <p class="feature-desc">Asymmetric signing with RSA 256. Access tokens are verifiable by any party that has your public key.</p>
+          </div>
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">JWKS Endpoint</h3>
+            <p class="feature-desc">Serve your public signing keys at <code class="inline-code">/.well-known/jwks.json</code> so any service can verify tokens without secrets.</p>
+          </div>
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/>
+                <path d="M20 21a8 8 0 1 0-16 0"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">UserInfo Endpoint</h3>
+            <p class="feature-desc">Fetch profile data on demand. Returns name, email, and verification status from a standard Bearer-token call.</p>
+          </div>
+
+          <div class="feature-card card">
+            <div class="feature-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                <path d="M21 3v5h-5"/>
+                <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                <path d="M3 21v-5h5"/>
+              </svg>
+            </div>
+            <h3 class="feature-title">Refresh Tokens</h3>
+            <p class="feature-desc">Keep users signed in with long-lived refresh tokens. Exchange them for fresh access tokens without re-authentication.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-section" id="how-it-works" aria-labelledby="howHeading">
+      <div class="section-inner">
+        <div class="section-label">How It Works</div>
+        <h2 class="section-heading" id="howHeading">The Authorization Code Flow</h2>
+        <p class="section-subheading">Three steps from zero to authenticated user.</p>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-number" aria-hidden="true">01</div>
+            <div class="step-content">
+              <h3 class="step-title">Register Your Application</h3>
+              <p class="step-desc">Create an application and receive a Client ID and Client Secret. Specify your Redirect URI — the callback URL where users will be sent after authorization.</p>
+              <a href="/register-app.html" class="step-link">
+                Register an App
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <div class="step">
+            <div class="step-number" aria-hidden="true">02</div>
+            <div class="step-content">
+              <h3 class="step-title">Redirect the User to Authorize</h3>
+              <p class="step-desc">Send the user to <code class="inline-code">/o/authorize</code> with your <code class="inline-code">client_id</code>, <code class="inline-code">redirect_uri</code>, and requested scopes. They sign in and approve access.</p>
+              <div class="step-code code-block">/o/authorize?response_type=code<br />&amp;client_id=your-client-id<br />&amp;redirect_uri=…&amp;scope=openid+email</div>
+            </div>
+          </div>
+
+          <div class="step-connector" aria-hidden="true"></div>
+
+          <div class="step">
+            <div class="step-number" aria-hidden="true">03</div>
+            <div class="step-content">
+              <h3 class="step-title">Exchange the Code for Tokens</h3>
+              <p class="step-desc">Your server receives an authorization code at the redirect URI. Exchange it at <code class="inline-code">/o/tokeninfo</code> using your Client Secret to receive an access token and refresh token.</p>
+              <div class="step-code code-block">POST /o/tokeninfo<br />&#123; code, client_secret &#125;<br />→ &#123; access_token, refresh_token &#125;</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Developer Benefits -->
+    <section class="benefits-section" aria-labelledby="benefitsHeading">
+      <div class="section-inner">
+        <div class="section-label">Developer Benefits</div>
+        <h2 class="section-heading" id="benefitsHeading">Built for developers, not just for ops</h2>
+
+        <div class="benefits-grid">
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">Standard OIDC Discovery</div>
+              <div class="benefit-desc">Auto-configure any OIDC-compatible library with the discovery document at <code class="inline-code">/.well-known/openid-configuration</code>.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">No Dependencies on Frontend</div>
+              <div class="benefit-desc">Token exchange happens server-to-server. Your client secret never touches the browser.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">Stateless Access Tokens</div>
+              <div class="benefit-desc">RS256 JWTs can be verified offline by any service with your public key — no database round-trip per request.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">Multiple Applications</div>
+              <div class="benefit-desc">Register as many apps as you need. Each gets its own Client ID and secret — clean separation of access.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">Single Sign-On Ready</div>
+              <div class="benefit-desc">One user account, many applications. The same identity works across every registered client.</div>
+            </div>
+          </div>
+          <div class="benefit-item">
+            <div class="benefit-check" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div>
+              <div class="benefit-title">Token Refresh Built In</div>
+              <div class="benefit-desc">30-day refresh tokens keep users signed in smoothly without interrupting them for credentials.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" aria-labelledby="ctaHeading">
+      <div class="section-inner cta-inner">
+        <div class="cta-icon" aria-hidden="true">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <h2 class="cta-heading" id="ctaHeading">Ready to add secure login?</h2>
+        <p class="cta-subheading">Register your application and start the OAuth flow in under five minutes.</p>
+        <div class="cta-actions">
+          <a href="/register-app.html" class="btn btn-primary btn-lg">Register an Application</a>
+          <a href="/signup.html" class="btn btn-outline btn-lg">Create an Account</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer" role="contentinfo">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <div class="nav-logo-icon" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a5 5 0 1 0 0 10A5 5 0 0 0 12 2z"/>
+            <path d="M20 21a8 8 0 1 0-16 0"/>
+          </svg>
+        </div>
+        <span>AuthForge</span>
+      </div>
+      <div class="footer-links">
+        <a href="/.well-known/openid-configuration" class="footer-link" target="_blank" rel="noopener">OIDC Config</a>
+        <a href="/.well-known/jwks.json" class="footer-link" target="_blank" rel="noopener">JWKS</a>
+        <a href="/dashboard.html" class="footer-link">Dashboard</a>
+        <a href="/register-app.html" class="footer-link">Register App</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/landing.js"></script>
+</body>
+</html>

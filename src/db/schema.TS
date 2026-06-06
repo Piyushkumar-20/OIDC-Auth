@@ -28,6 +28,8 @@ export const userTable = pgTable("user", {
 export const applicationTable = pgTable("application", {
   id: uuid("id").primaryKey().defaultRandom(),
 
+  userId: uuid("user_id").notNull(),
+
   displayName: varchar("display_name", { length: 255 }).notNull(),
 
   client_id: text("client_id").notNull().unique(),

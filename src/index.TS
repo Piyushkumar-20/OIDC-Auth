@@ -4,7 +4,7 @@ import jose from "node-jose";
 import crypto from "node:crypto";
 import { PUBLIC_KEY, PRIVATE_KEY } from "./utils/cert.js";
 import { db } from "./db/index.js";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import {
   userTable,
   applicationTable,
@@ -20,6 +20,37 @@ const PORT = process.env.PORT ?? 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve("public")));
+
+interface AuthedRequest extends express.Request {
+  user: JWTClaims;
+}
+
+function getSessionToken(req: express.Request): string | null {
+  const cookieHeader = req.headers.cookie ?? "";
+  const match = cookieHeader.split(";").find(c => c.trim().startsWith("session="));
+  return match ? match.trim().slice("session=".length) : null;
+}
+
+function requireAuth(
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+): void {
+  const token = getSessionToken(req);
+  if (!token) {
+    res.status(401).json({ message: "Unauthorized. Please sign in." });
+    return;
+  }
+  try {
+    const claims = JWT.verify(token, PUBLIC_KEY, {
+      algorithms: ["RS256"],
+    }) as JWTClaims;
+    (req as AuthedRequest).user = claims;
+    next();
+  } catch {
+    res.status(401).json({ message: "Session expired. Please sign in." });
+  }
+}
 
 function generateAccessToken(user: typeof userTable.$inferSelect) {
   const ISSUER = `http://localhost:${PORT}`;
@@ -177,6 +208,70 @@ app.post("/o/authenticate/sign-up", async (req, res) => {
   res.status(201).json({ ok: true });
 });
 
+// Normal website sign-in — no OAuth application involved
+app.post("/sign-in", async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: "Email and password are required." });
+  }
+
+  const [user] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.email, email))
+    .limit(1);
+
+  if (!user || !user.password || !user.salt) {
+    return res.status(401).json({ message: "Invalid email or password." });
+  }
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(password + user.salt)
+    .digest("hex");
+
+  if (hash !== user.password) {
+    return res.status(401).json({ message: "Invalid email or password." });
+  }
+
+  const token = generateAccessToken(user);
+
+  res.cookie("session", token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 1000, // 1 hour
+  });
+
+  return res.json({ redirect: "/dashboard.html" });
+});
+
+// Return the logged-in user's display info from their session cookie
+app.get("/me", (req, res) => {
+  const token = getSessionToken(req);
+  if (!token) return res.status(401).json({ message: "Not authenticated." });
+
+  try {
+    const claims = JWT.verify(token, PUBLIC_KEY, {
+      algorithms: ["RS256"],
+    }) as JWTClaims;
+    return res.json({ name: claims.name, given_name: claims.given_name });
+  } catch {
+    return res.status(401).json({ message: "Session expired." });
+  }
+});
+
+// Clear the session cookie
+app.post("/sign-out", (req, res) => {
+  res.clearCookie("session", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+  });
+  return res.json({ ok: true });
+});
+
 app.get("/o/userinfo", async (req, res) => {
   const authHeader = req.headers.authorization;
 
@@ -223,21 +318,24 @@ app.get("/o/userinfo", async (req, res) => {
 
 //OAuth Implementation
 
-// Admin application - to create a new aplication and get clientid and client secret
-app.post("/admin/application", async (req, res) => {
+// Create a new application — authenticated users only
+app.post("/admin/application", requireAuth, async (req, res) => {
+  const { user } = req as AuthedRequest;
   const { displayName, applicationUrl, redirectUri } = req.body;
 
   if (!displayName || !applicationUrl || !redirectUri) {
     return res.status(400).json({
-      message: "Display Name, Application URL, Redirct URL is required",
+      message: "Display Name, Application URL, and Redirect URI are required.",
     });
   }
+
   const clientId = crypto.randomUUID();
   const clientSecret = crypto.randomBytes(32).toString("hex");
 
   const [application] = await db
     .insert(applicationTable)
     .values({
+      userId: user.sub,
       displayName,
       applicationUrl,
       redirectUri,
@@ -250,6 +348,63 @@ app.post("/admin/application", async (req, res) => {
     client_id: application?.client_id,
     client_secret: application?.client_secret,
   });
+});
+
+// List applications belonging to the authenticated user (client_secret omitted)
+app.get("/admin/applications", requireAuth, async (req, res) => {
+  const { user } = req as AuthedRequest;
+
+  const applications = await db
+    .select({
+      id: applicationTable.id,
+      displayName: applicationTable.displayName,
+      client_id: applicationTable.client_id,
+      applicationUrl: applicationTable.applicationUrl,
+      redirectUri: applicationTable.redirectUri,
+      createdAt: applicationTable.createdAt,
+    })
+    .from(applicationTable)
+    .where(eq(applicationTable.userId, user.sub))
+    .orderBy(applicationTable.createdAt);
+
+  return res.json(applications);
+});
+
+// Delete an application — must belong to the authenticated user
+app.delete("/admin/application/:id", requireAuth, async (req, res) => {
+  const { user } = req as AuthedRequest;
+  const id = req.params.id as string;
+
+  const [deleted] = await db
+    .delete(applicationTable)
+    .where(and(eq(applicationTable.id, id), eq(applicationTable.userId, user.sub)))
+    .returning({ id: applicationTable.id });
+
+  if (!deleted) {
+    return res.status(404).json({ message: "Application not found." });
+  }
+
+  return res.json({ ok: true });
+});
+
+// Regenerate secret — must belong to the authenticated user
+app.post("/admin/application/:id/regenerate-secret", requireAuth, async (req, res) => {
+  const { user } = req as AuthedRequest;
+  const id = req.params.id as string;
+
+  const newSecret = crypto.randomBytes(32).toString("hex");
+
+  const [updated] = await db
+    .update(applicationTable)
+    .set({ client_secret: newSecret })
+    .where(and(eq(applicationTable.id, id), eq(applicationTable.userId, user.sub)))
+    .returning({ id: applicationTable.id });
+
+  if (!updated) {
+    return res.status(404).json({ message: "Application not found." });
+  }
+
+  return res.json({ client_secret: newSecret });
 });
 
 // Authorize - check if user is valid or not
