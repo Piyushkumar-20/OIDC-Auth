@@ -9,6 +9,7 @@ import {
   userTable,
   applicationTable,
   authorizationCodeTable,
+  refreshTokenTable,
 } from "./db/schema.js";
 import type { JWTClaims } from "./utils/user-token.js";
 import JWT from "jsonwebtoken";
@@ -19,6 +20,29 @@ const PORT = process.env.PORT ?? 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.resolve("public")));
+
+function generateAccessToken(user: typeof userTable.$inferSelect) {
+  const ISSUER = `http://localhost:${PORT}`;
+  const now = Math.floor(Date.now() / 1000);
+
+  const claims: JWTClaims = {
+    iss: ISSUER,
+    sub: user.id,
+    email: user.email,
+    email_verified: String(user.emailVerified),
+    exp: now + 3600,
+    given_name: user.firstName ?? "",
+    family_name: user.lastName ?? undefined,
+    name: [user.firstName, user.lastName]
+      .filter(Boolean)
+      .join(" "),
+    picture: user.profileImageURL ?? undefined,
+  };
+
+  return JWT.sign(claims, PRIVATE_KEY, {
+    algorithm: "RS256",
+  });
+}
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello from Auth Server" });
@@ -37,6 +61,9 @@ app.get("/.well-known/openid-configuration", (req, res) => {
     userinfo_endpoint: `${ISSUER}/o/userinfo`,
     jwks_uri: `${ISSUER}/.well-known/jwks.json`,
     tokeninfo: `${ISSUER}/o/tokeninfo`,
+    response_types_supported: ["code"],
+    subject_types_supported: ["public"],
+    id_token_signing_alg_values_supported: ["RS256"]
   });
 });
 
@@ -195,6 +222,8 @@ app.get("/o/userinfo", async (req, res) => {
 });
 
 //OAuth Implementation
+
+// Admin application - to create a new aplication and get clientid and client secret
 app.post("/admin/application", async (req, res) => {
   const { displayName, applicationUrl, redirectUri } = req.body;
 
@@ -223,6 +252,7 @@ app.post("/admin/application", async (req, res) => {
   });
 });
 
+// Authorize - check if user is valid or not
 app.get("/o/authorize", async (req, res) => {
   try {
     const { client_id, redirect_uri, response_type, state, nonce } = req.query;
@@ -270,6 +300,7 @@ app.get("/o/authorize", async (req, res) => {
   }
 });
 
+// Token info POST request
 app.post("/o/tokeninfo", async (req, res) => {
   const { code, client_secret } = req.body;
 
@@ -316,25 +347,82 @@ app.post("/o/tokeninfo", async (req, res) => {
     });
   }
   const [user] = await db
-  .select()
-  .from(userTable)
-  .where(eq(userTable.id, authCode.userId))
-  .limit(1)
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id, authCode.userId))
+    .limit(1);
 
   if (!user) {
     return res.status(404).json({
       message: "User not found",
     });
   }
-  return res.json({
-    message: "User fetched successfully",
-    user: {
-      id: user.id,
-      email: user.email,
-    },
+
+  const accessToken = generateAccessToken(user);
+  const refreshToken = crypto.randomBytes(64).toString("hex");
+
+  await db.insert(refreshTokenTable).values({
+    token: refreshToken,
+    user_id: user.id,
+    client_id: application.client_id,
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
   });
 
+  await db
+    .update(authorizationCodeTable)
+    .set({ used: true })
+    .where(eq(authorizationCodeTable.id, authCode.id));
+
+  return res.json({
+    access_token: accessToken,
+    refresh_token: refreshToken,
+    tokenType: "Bearer",
+    expires_in: 3600,
+  });
 });
+
+app.post("/o/token", async (req,res) => {
+  const {grant_type, refresh_token} = req.body;
+
+  if(grant_type !== "refresh_token"){
+    return res.status(400).json({message: "Invalid Grant Type"})
+  }
+  if (!refresh_token) {
+    return res.status(400).json({message: "Refresh token is required"})
+  }
+
+  const [storedToken] = await db
+    .select()
+    .from(refreshTokenTable)
+    .where(eq(refreshTokenTable.token, refresh_token))
+    .limit(1)
+
+    if (!storedToken){
+      return res.status(401).json({message: "Invalid Refresh Token"})
+    }
+
+    if (storedToken.expires_at.getTime() < Date.now()){
+      return res.status(401).json({message: "Refresh Token expired"})
+    }
+    const [user] = await db
+    .select()
+    .from(userTable)
+    .where(eq(userTable.id , storedToken.user_id))
+    .limit(1)
+
+    if (!user){
+      return res.status(404).json({message: "User Not Found!"})
+    }
+    const accessToken = generateAccessToken(user)
+
+    return res.json({
+      access_token: accessToken,
+      token_type: "Bearer",
+      expires_in: 3600,
+    });
+})
+
+
 app.listen(PORT, () => {
   console.log(`AuthServer is running on http://localhost:${PORT}`);
 });
