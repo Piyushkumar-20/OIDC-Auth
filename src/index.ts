@@ -2,16 +2,16 @@ import express from "express";
 import path from "node:path";
 import jose from "node-jose";
 import crypto from "node:crypto";
-import { PUBLIC_KEY, PRIVATE_KEY } from "./utils/cert.js";
-import { db } from "./db/index.js";
+import { PUBLIC_KEY, PRIVATE_KEY } from "./utils/cert";
+import { db } from "./db/index";
 import { and, eq } from "drizzle-orm";
 import {
   userTable,
   applicationTable,
   authorizationCodeTable,
   refreshTokenTable,
-} from "./db/schema.js";
-import type { JWTClaims } from "./utils/user-token.js";
+} from "./db/schema";
+import type { JWTClaims } from "./utils/user-token";
 import JWT from "jsonwebtoken";
 
 const app = express();
